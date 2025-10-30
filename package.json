@@ -1,0 +1,27 @@
+{
+  "name": "mastra-serverless-cpu",
+  "version": "1.0.0",
+  "description": "Mastra server for Runpod serverless CPU deployment",
+  "main": ".mastra/output/index.mjs",
+  "type": "module",
+  "scripts": {
+    "build": "mastra build",
+    "dev": "mastra dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@mastra/core": "^0.23.3",
+    "@mastra/libsql": "^0.16.1",
+    "@mastra/memory": "^0.15.10",
+    "@runpod/ai-sdk-provider": "^0.7.0",
+    "hono": "^4.5.5",
+    "zod": "^3.25.64"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "mastra": "^0.17.7",
+    "typescript": "^5.5.0"
+  }
+}
