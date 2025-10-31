@@ -2,6 +2,8 @@
 
 Mastra production server running on Runpod Serverless CPU with Load Balancer support.
 
+> **Note**: This project uses automated CI/CD workflows for building and pushing Docker images to Docker Hub.
+
 ## Features
 
 - Mastra Hono server with weather agent and tool (no API key required for weather)
