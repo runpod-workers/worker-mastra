@@ -11,15 +11,15 @@ process.env.PORT = mastraPort.toString();
 // Import Mastra - this starts the server on mastraPort
 await import("./.mastra/output/index.mjs");
 
-// Wait a bit for Mastra to start
-await new Promise((resolve) => setTimeout(resolve, 2000));
+// Wait for Mastra to start
+await new Promise((resolve) => setTimeout(resolve, 3000));
 
 // Create wrapper server that handles /ping and proxies rest to Mastra
 const server = createServer((req, res) => {
   // Handle /ping endpoint for Runpod health checks
   if (req.url === "/ping") {
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ status: "ok" }));
+    res.end(JSON.stringify({ status: "healthy" }));
     return;
   }
 
@@ -49,8 +49,8 @@ const server = createServer((req, res) => {
   });
 });
 
-server.listen(port, () => {
+server.listen(port, "0.0.0.0", () => {
   console.log(
-    `Server wrapper running on port ${port}, proxying to Mastra on ${mastraPort}`
+    `Server wrapper running on 0.0.0.0:${port}, proxying to Mastra on ${mastraPort}`
   );
 });

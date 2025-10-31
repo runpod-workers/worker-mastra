@@ -1,5 +1,5 @@
 {
-  "name": "mastra-serverless-cpu",
+  "name": "worker-mastra",
   "version": "1.0.0",
   "description": "Mastra server for Runpod serverless CPU deployment",
   "main": ".mastra/output/index.mjs",
