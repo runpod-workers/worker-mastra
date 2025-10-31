@@ -16,12 +16,13 @@ permissions:
 
 jobs:
   release:
-    runs-on: [blacksmith-8vcpu-ubuntu-2204, linux]
+    runs-on: [ubuntu-latest, blacksmith-8vcpu-ubuntu-2204] # Primary: ubuntu-latest, Fallback: blacksmith
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Clear space to remove unused folders
+        if: runner.name == 'blacksmith-8vcpu-ubuntu-2204'
         run: |
           rm -rf /usr/share/dotnet
           rm -rf /opt/ghc
@@ -41,6 +42,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: blacksmith docker layer cache
+        if: runner.name == 'blacksmith-8vcpu-ubuntu-2204'
         uses: useblacksmith/build-push-action@v1
         with:
           setup-only: true
