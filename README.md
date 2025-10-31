@@ -15,10 +15,44 @@ Mastra production server running on Runpod Serverless CPU with Load Balancer sup
 
 ## Build
 
+### Local Build and Push to Docker Hub
+
+**Prerequisites:**
+- Docker installed and running
+- Docker Hub credentials (for `runpod` organization)
+
+**Steps:**
+
+1. **Login to Docker Hub:**
+   ```bash
+   docker login
+   ```
+   Enter your Docker Hub username and password (or access token for `runpod` org)
+
+2. **Build and push using the helper script:**
+   ```bash
+   ./build-and-push.sh latest
+   ```
+   Or specify a version:
+   ```bash
+   ./build-and-push.sh v1.0.0
+   ```
+
+3. **Or manually:**
+   ```bash
+   # Build
+   docker build --platform linux/amd64 -t runpod/worker-mastra:latest .
+   
+   # Push
+   docker push runpod/worker-mastra:latest
+   ```
+
+### Development Build (without push)
+
 ```bash
 npm install
 npm run build
-docker build --platform linux/amd64 -t runpod/worker-mastra:latest .
+docker build --platform linux/amd64 -t runpod/worker-mastra:test .
 ```
 
 ## Run Locally
