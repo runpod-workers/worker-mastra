@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: worker-mastra-postgres
+    environment:
+      POSTGRES_DB: worker_mastra
+      POSTGRES_USER: worker_mastra_user
+      POSTGRES_PASSWORD: worker_mastra_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U worker_mastra_user -d worker_mastra"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: worker-mastra-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker-mastra:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: worker-mastra-app
+    ports:
+      - "3000:80"
+    environment:
+      RUNPOD_API_KEY: ${RUNPOD_API_KEY:-your-key-here}
+      DB_HOST: postgres
+      DB_USERNAME: worker_mastra_user
+      DB_NAME: worker_mastra
+      DB_PASSWORD: worker_mastra_password
+      PORT: 80
+      PORT_HEALTH: 80
+      MASTRA_PORT: 4111
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  pgadmin_data:
