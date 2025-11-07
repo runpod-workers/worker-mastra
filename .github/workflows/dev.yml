@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   dev:
-    runs-on: [ubuntu-latest, blacksmith-8vcpu-ubuntu-2204] # Primary: ubuntu-latest, Fallback: blacksmith
+    runs-on: [ubuntu-latest, Linux, blacksmith-8vcpu-ubuntu-2204] # Primary: ubuntu-latest, Fallback: Linux/blacksmith
     steps:
       - name: Checkout
         uses: actions/checkout@v3
