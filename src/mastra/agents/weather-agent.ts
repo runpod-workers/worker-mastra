@@ -1,11 +1,25 @@
 import { createRunpod } from "@runpod/ai-sdk-provider";
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
-import { LibSQLStore } from "@mastra/libsql";
+import { PgVector } from "@mastra/pg";
 import { weatherTool } from "../tools/weather-tool";
 
 const runpod = createRunpod({
   apiKey: process.env.RUNPOD_API_KEY,
+});
+
+const dbPort = process.env.DB_PORT || "6543";
+const connectionString = `postgresql://${process.env.DB_USERNAME!}:${process.env.DB_PASSWORD!}@${process.env.DB_HOST!}:${dbPort}/${process.env.DB_NAME!}`;
+
+const memory = new Memory({
+  vector: new PgVector({ connectionString }),
+  options: {
+    semanticRecall: false,
+    lastMessages: 40,
+    threads: {
+      generateTitle: true,
+    },
+  },
 });
 
 export const weatherAgent = new Agent({
@@ -24,9 +38,5 @@ export const weatherAgent = new Agent({
   `,
   model: runpod("qwen/qwen3-32b-awq"),
   tools: { weatherTool },
-  memory: new Memory({
-    storage: new LibSQLStore({
-      url: ":memory:",
-    }),
-  }),
+  memory,
 });
