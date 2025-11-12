@@ -6,6 +6,7 @@ import { weatherTool } from "../tools/weather-tool";
 
 const runpod = createRunpod({
   apiKey: process.env.RUNPOD_API_KEY,
+  baseURL: `https://api.runpod.ai/v2/gpt-oss-120b/openai/v1`,
 });
 
 const dbPort = process.env.DB_PORT || "6543";
@@ -36,7 +37,7 @@ export const weatherAgent = new Agent({
 
     Use the weatherTool to fetch current weather data.
   `,
-  model: runpod("qwen/qwen3-32b-awq"),
+  model: runpod("openai/gpt-oss-120b"),
   tools: { weatherTool },
   memory,
 });
