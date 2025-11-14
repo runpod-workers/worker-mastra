@@ -36,7 +36,7 @@ export const weatherAgent = new Agent({
 
     Use the weatherTool to fetch current weather data.
   `,
-  model: runpod("qwen/qwen3-32b-awq"),
+  model: runpod("openai/gpt-oss-120b"),
   tools: { weatherTool },
   memory,
 });
