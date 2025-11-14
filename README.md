@@ -7,7 +7,7 @@ Mastra production server running on Runpod Serverless CPU with Load Balancer sup
 ## Features
 
 - Mastra Hono server with weather agent and tool (no API key required for weather)
-- Runpod AI SDK provider with Qwen3 support
+- Runpod AI SDK provider with OpenAI GPT-OSS-120B support
 - `/ping` health check endpoint for Runpod serverless load balancer
 - PostgreSQL storage with PgVector for agent memory
 - Observability and telemetry enabled (Mastra Cloud)
