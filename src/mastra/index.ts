@@ -4,10 +4,10 @@ import { PinoLogger } from "@mastra/loggers";
 import { weatherAgent } from "./agents/weather-agent";
 
 const host = process.env.DB_HOST!;
-const port = 5432;
+const port = parseInt(process.env.DB_PORT || "6543");
 const user = process.env.DB_USERNAME!;
 const database = process.env.DB_NAME!;
-const password = process.env.DB_PASS!;
+const password = process.env.DB_PASSWORD!;
 
 export const pgStorage = new PostgresStore({
   host,
