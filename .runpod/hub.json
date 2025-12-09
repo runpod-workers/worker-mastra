@@ -1,0 +1,93 @@
+{
+  "title": "Mastra AI Agent Server",
+  "description": "Deploy AI agents powered by Mastra with OpenAI-compatible endpoints and PostgreSQL-backed memory",
+  "type": "serverless",
+  "category": "language",
+  "iconUrl": "https://mastra.ai/favicon.ico",
+  "config": {
+    "runsOn": "CPU",
+    "cpuFlavor": "cpu3g-4-16",
+    "endpointType": "LB",
+    "containerDiskInGb": 20,
+    "env": [
+      {
+        "key": "RUNPOD_API_KEY",
+        "input": {
+          "name": "Runpod API Key",
+          "type": "string",
+          "description": "Your Runpod API key for AI model access",
+          "required": true,
+          "sensitive": true
+        }
+      },
+      {
+        "key": "DB_HOST",
+        "input": {
+          "name": "Database Host",
+          "type": "string",
+          "description": "PostgreSQL database host address (e.g., db.xxx.supabase.co). Optional - uses in-memory storage if not provided.",
+          "advanced": true
+        }
+      },
+      {
+        "key": "DB_USERNAME",
+        "input": {
+          "name": "Database Username",
+          "type": "string",
+          "description": "PostgreSQL database username",
+          "advanced": true
+        }
+      },
+      {
+        "key": "DB_NAME",
+        "input": {
+          "name": "Database Name",
+          "type": "string",
+          "description": "PostgreSQL database name",
+          "advanced": true
+        }
+      },
+      {
+        "key": "DB_PASSWORD",
+        "input": {
+          "name": "Database Password",
+          "type": "string",
+          "description": "PostgreSQL database password",
+          "sensitive": true,
+          "advanced": true
+        }
+      },
+      {
+        "key": "DB_PORT",
+        "input": {
+          "name": "Database Port",
+          "type": "number",
+          "description": "PostgreSQL database port (6543 for transaction pooler, 5432 for direct)",
+          "default": 6543,
+          "advanced": true
+        }
+      },
+      {
+        "key": "PORT",
+        "input": {
+          "name": "Server Port",
+          "type": "number",
+          "description": "Port the server listens on",
+          "default": 80,
+          "advanced": true
+        }
+      },
+      {
+        "key": "MASTRA_PORT",
+        "input": {
+          "name": "Internal Mastra Port",
+          "type": "number",
+          "description": "Internal port for Mastra server",
+          "default": 4111,
+          "advanced": true
+        }
+      }
+    ]
+  }
+}
+
