@@ -1,26 +1,13 @@
 import { createRunpod } from "@runpod/ai-sdk-provider";
 import { Agent } from "@mastra/core/agent";
-import { Memory } from "@mastra/memory";
-import { PgVector } from "@mastra/pg";
 import { weatherTool } from "../tools/weather-tool";
+import { createAgentMemory } from "../utils/db";
 
 const runpod = createRunpod({
   apiKey: process.env.RUNPOD_API_KEY,
 });
 
-const dbPort = process.env.DB_PORT || "6543";
-const connectionString = `postgresql://${process.env.DB_USERNAME!}:${process.env.DB_PASSWORD!}@${process.env.DB_HOST!}:${dbPort}/${process.env.DB_NAME!}`;
-
-const memory = new Memory({
-  vector: new PgVector({ connectionString }),
-  options: {
-    semanticRecall: false,
-    lastMessages: 40,
-    threads: {
-      generateTitle: true,
-    },
-  },
-});
+const memory = createAgentMemory("Weather Agent");
 
 export const weatherAgent = new Agent({
   name: "Weather Agent",
@@ -38,5 +25,5 @@ export const weatherAgent = new Agent({
   `,
   model: runpod("openai/gpt-oss-120b"),
   tools: { weatherTool },
-  memory,
+  ...(memory && { memory }),
 });
