@@ -7,7 +7,7 @@ const storage = createStorage();
 
 export const mastra = new Mastra({
   agents: { weatherAgent },
-  ...(storage && { storage }),
+  storage,
   logger: new PinoLogger(),
   observability: {
     default: { enabled: true },

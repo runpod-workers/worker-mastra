@@ -25,5 +25,5 @@ export const weatherAgent = new Agent({
   `,
   model: runpod("openai/gpt-oss-120b"),
   tools: { weatherTool },
-  ...(memory && { memory }),
+  memory,
 });
