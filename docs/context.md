@@ -52,6 +52,10 @@ This document outlines the key technical conventions and architectural decisions
 
 - **Database Port:** Default to `6543` (transaction pooler) for serverless deployments, use `5432` for direct connections
 
+## Build Constraints
+
+- **No Conditional Spread Operators:** Mastra's babel transform cannot handle `...(condition && { property })` syntax. Pass properties directly (even if undefined) instead of using conditional spreads.
+
 ## Docker Build and Deployment
 
 - **Multi-stage Build:** Uses Node.js Alpine base image for minimal size (< 1.5GB)
