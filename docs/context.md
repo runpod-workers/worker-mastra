@@ -10,7 +10,7 @@ This document outlines the key technical conventions and architectural decisions
   - External functionalities are integrated as Mastra Tools or via MCP (Model Context Protocol).
   - Multiple agents can coexist in a single Mastra instance.
 - **AI Provider:** RunPod AI SDK Provider (`@runpod/ai-sdk-provider` v0.9.0)
-  - Uses OpenAI GPT-OSS-120B model (`openai/gpt-oss-120b`) for agent reasoning.
+  - Uses Qwen3-32B model (`qwen/qwen3-32b-awq`) for agent reasoning.
   - Supports streaming and non-streaming text generation.
 - **Server Framework:** Hono (via Mastra's built-in server)
 - **Storage:** Optional PostgreSQL with PgVector extension (defaults to in-memory)
