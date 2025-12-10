@@ -13,12 +13,18 @@ This document outlines the key technical conventions and architectural decisions
   - Uses OpenAI GPT-OSS-120B model (`openai/gpt-oss-120b`) for agent reasoning.
   - Supports streaming and non-streaming text generation.
 - **Server Framework:** Hono (via Mastra's built-in server)
-- **Storage:** PostgreSQL with PgVector extension
-  - Global storage: `PostgresStore` from `@mastra/pg`
-  - Agent memory: `PgVector` from `@mastra/pg` for embeddings
+- **Storage:** Optional PostgreSQL with PgVector extension (defaults to in-memory)
+  - Global storage: `PostgresStore` from `@mastra/pg` (when DB credentials provided)
+  - Agent memory: `PgVector` from `@mastra/pg` for embeddings (when DB credentials provided)
+  - Falls back to in-memory storage when no database credentials are configured
 - **External Tool Integration:** MCP (Model Context Protocol) via `@mastra/mcp`
   - MCP servers provide external tools to agents (e.g., RunPod API tools)
   - MCP configuration in `src/mastra/mcp-config.ts` manages server connections
+- **Project Structure:**
+  - `src/mastra/agents/` - Agent definitions
+  - `src/mastra/tools/` - Mastra tool implementations
+  - `src/mastra/utils/` - Shared utilities (db, etc.)
+  - `src/mastra/index.ts` - Mastra instance configuration
 - **Deployment:** Runpod Serverless CPU with Load Balancer endpoint type
 
 ## Architecture
@@ -36,55 +42,19 @@ This document outlines the key technical conventions and architectural decisions
 
 ## Memory and Storage Configuration
 
-- **Global Storage Provider (Postgres):** Configure a single Postgres storage provider globally on the main Mastra instance in `src/mastra/index.ts`. This storage will be inherited by all agents and memory instances.
+- **Optional Database:** Storage is optional. When database credentials are not provided, the system uses in-memory storage. This allows the worker to run without a database for testing or simple use cases.
 
-```typescript
-// ✅ Correct: Global Postgres storage configuration
-import { Mastra } from "@mastra/core";
-import { PostgresStore } from "@mastra/pg";
-import { weatherAgent } from "./agents/weather-agent";
-
-const host = process.env.DB_HOST!;
-const port = parseInt(process.env.DB_PORT || "6543");
-const user = process.env.DB_USERNAME!;
-const database = process.env.DB_NAME!;
-const password = process.env.DB_PASSWORD!;
-
-export const pgStorage = new PostgresStore({
-  host,
-  port,
-  user,
-  database,
-  password,
-});
-
-export const mastra = new Mastra({
-  agents: { weatherAgent, runpodInfraAgent },
-  storage: pgStorage,
-});
-```
-
-- **Agent Memory Configuration (PgVector):** Agents should create a `Memory` instance that uses PgVector for embeddings. Storage is inherited from the global Mastra instance; do not reconfigure storage per agent.
-
-```typescript
-// ✅ Correct: Agent memory with PgVector, inherits global storage
-import { Memory } from "@mastra/memory";
-import { PgVector } from "@mastra/pg";
-
-const dbPort = process.env.DB_PORT || "6543";
-const connectionString = `postgresql://${process.env.DB_USERNAME!}:${process.env.DB_PASSWORD!}@${process.env.DB_HOST!}:${dbPort}/${process.env.DB_NAME!}`;
-
-export const memory = new Memory({
-  vector: new PgVector({ connectionString }),
-  options: {
-    semanticRecall: false,
-    lastMessages: 40,
-    threads: { generateTitle: true },
-  },
-});
-```
+- **Centralized Database Utilities:** All database credential checking and storage creation is centralized in `src/mastra/utils/db.ts`. This utility provides:
+  - `hasDbCredentials`: Boolean check for all required DB credentials
+  - `createStorage()`: Creates `PostgresStore` for global Mastra storage
+  - `createAgentMemory(agentName)`: Creates `Memory` with `PgVector` for agent-specific memory
+  - Agents do not handle database logic directly - they import from the utility
 
 - **Database Port:** Default to `6543` (transaction pooler) for serverless deployments, use `5432` for direct connections
+
+## Build Constraints
+
+- **No Conditional Spread Operators:** Mastra's babel transform cannot handle `...(condition && { property })` syntax. Pass properties directly (even if undefined) instead of using conditional spreads.
 
 ## Docker Build and Deployment
 
@@ -107,21 +77,27 @@ export const memory = new Memory({
 ### Required
 
 - `RUNPOD_API_KEY`: Runpod API key for accessing AI models
+
+### Optional (Database - for persistent storage)
+
 - `DB_HOST`: PostgreSQL database host address
 - `DB_USERNAME`: PostgreSQL database username
 - `DB_NAME`: PostgreSQL database name
 - `DB_PASSWORD`: PostgreSQL database password
+- `DB_PORT`: PostgreSQL database port (default: `6543` for transaction pooler)
 
-### Optional
+When all DB credentials are provided, PostgreSQL with PgVector is used. Otherwise, in-memory storage is used.
+
+### Optional (Server)
 
 - `PORT`: Server port (default: `80`)
 - `PORT_HEALTH`: Health check port (default: same as `PORT`)
 - `MASTRA_PORT`: Internal Mastra server port (default: `4111`)
-- `DB_PORT`: PostgreSQL database port (default: `6543` for transaction pooler)
 
 ## Agent Patterns
 
 - **Multiple Agents:** Multiple agents can be registered in a single Mastra instance. Each agent has its own memory instance but shares the global storage provider.
+- **Memory Initialization:** Agents import `createAgentMemory()` from `utils/db.ts` - they do not handle database logic themselves.
 - **Tool Integration:** Agents can use:
   - Mastra Tools: Direct tool implementations (e.g., `weatherTool`)
   - MCP Tools: External tools provided via MCP servers (e.g., RunPod API tools)
@@ -140,3 +116,13 @@ export const memory = new Memory({
   - Release builds: Push version tags on tag push or manual dispatch
 - **Docker Hub:** Images pushed to `runpod/worker-mastra:<version>`
 - **Runpod Git Pipeline:** Configure to build and deploy on push to `main` branch
+
+## RunPod Hub Integration
+
+- **Hub Metadata:** `.runpod/` folder contains Hub publishing configuration
+  - `hub.json`: Worker metadata, environment variables, and deployment config
+  - `tests.json`: Automated endpoint tests for Hub validation
+  - `README.md`: Hub-specific documentation displayed on the Hub page
+- **Endpoint Type:** Load Balancer (`LB`) for high availability
+- **Runtime:** CPU serverless (no GPU required)
+- **Category:** `language` (AI/LLM category)

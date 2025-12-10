@@ -1,0 +1,40 @@
+{
+  "tests": [
+    {
+      "name": "health_check_test",
+      "method": "GET",
+      "path": "/ping",
+      "expectedStatus": 200,
+      "timeout": 10000
+    },
+    {
+      "name": "list_agents_test",
+      "method": "GET",
+      "path": "/api/agents",
+      "expectedStatus": 200,
+      "timeout": 10000
+    },
+    {
+      "name": "list_tools_test",
+      "method": "GET",
+      "path": "/api/tools",
+      "expectedStatus": 200,
+      "timeout": 10000
+    },
+    {
+      "name": "weather_tool_test",
+      "method": "POST",
+      "path": "/api/tools/get-weather/execute",
+      "input": {
+        "data": {
+          "location": "Berlin"
+        }
+      },
+      "expectedStatus": 200,
+      "timeout": 30000
+    }
+  ],
+  "config": {
+    "cpuFlavor": "cpu3g-4-16"
+  }
+}
