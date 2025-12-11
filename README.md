@@ -7,7 +7,7 @@ Mastra production server running on Runpod Serverless CPU with Load Balancer sup
 ## Features
 
 - Mastra Hono server with weather agent and tool (no API key required for weather)
-- Runpod AI SDK provider with OpenAI GPT-OSS-120B support
+- Runpod AI SDK provider with Qwen3-32B model support
 - `/ping` health check endpoint for Runpod serverless load balancer
 - PostgreSQL storage with PgVector for agent memory
 - Observability and telemetry enabled (Mastra Cloud)
@@ -160,7 +160,7 @@ For local development and testing, you can run Mastra directly without building 
    - 🔌 **API Endpoints**: http://localhost:4111/api - REST API for agents
    - 📚 **API Documentation**: http://localhost:4111/swagger-ui - Interactive API explorer
 
-**Note:** Make sure the `runpod-mcp` project is built and available at `../runpod-mcp/build/index.js` for the RunPod Infra Management agent to work. If you haven't built it yet:
+**Note:** Make sure the `runpod-mcp` project is built and available at `../runpod-mcp/build/index.js` for the Runpod Infra Management agent to work. If you haven't built it yet:
 
 ```bash
 cd ../runpod-mcp
@@ -315,7 +315,7 @@ Once deployed, access at: `https://YOUR_ENDPOINT_ID.api.runpod.ai/`
 - `GET /api/tools` - List available tools
 - `POST /api/tools/get-weather/execute` - Execute weather tool
 - `GET /api/agents` - List available agents
-- `POST /api/agents/weatherAgent/chat` - Chat with weather agent
+- `POST /api/agents/weatherAgent/generate` - Chat with weather agent
 
 ## Requirements Met
 

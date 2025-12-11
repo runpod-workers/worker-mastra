@@ -1,6 +1,6 @@
 ![Mastra AI Agent Server](https://mastra.ai/favicon.ico)
 
-Deploy AI agents powered by [Mastra](https://mastra.ai) with OpenAI-compatible endpoints
+Deploy AI agents powered by [Mastra](https://mastra.ai) on Runpod Serverless
 
 ---
 
@@ -8,24 +8,44 @@ Deploy AI agents powered by [Mastra](https://mastra.ai) with OpenAI-compatible e
 
 ---
 
+## Experimental
+
+This worker is **experimental** and designed to explore running AI agents on Runpod Serverless CPU endpoints.
+
+### Current Limitations
+
+**Cold Start Time:** CPU pods currently have a cold start time of 20-40 seconds. We are actively working on bringing **Flash Boot** to CPU pods (currently available for GPU pods) to enable instant startups.
+
+**Load Balancer:** This worker uses the experimental Load Balancer endpoint type to expose Mastra's HTTP API directly, without requiring the Runpod Python SDK.
+
+### Recommended Configuration
+
+To avoid cold start delays, we recommend setting **Active Workers to 1** in your endpoint configuration. This keeps one worker always running and ready to handle requests immediately.
+
+## Storage and Memory
+
+The worker supports two storage modes for agent memory:
+
+**In-Memory (Default):** Without database credentials, the worker uses file-based in-memory storage. This data is **lost when the worker stops**. Suitable for experimentation and stateless use cases.
+
+**PostgreSQL (Persistent):** Configure a PostgreSQL database with the `pgvector` extension for persistent agent memory across requests and worker restarts.
+
 ## Endpoint Configuration
 
 All behaviour is controlled through environment variables:
 
-| Environment Variable | Description                          | Default | Required |
-| -------------------- | ------------------------------------ | ------- | -------- |
-| `RUNPOD_API_KEY`     | Runpod API key for AI model access   |         | Yes      |
-| `DB_HOST`            | PostgreSQL database host             |         | No       |
-| `DB_USERNAME`        | PostgreSQL database username         |         | No       |
-| `DB_NAME`            | PostgreSQL database name             |         | No       |
-| `DB_PASSWORD`        | PostgreSQL database password         |         | No       |
-| `DB_PORT`            | PostgreSQL database port             | 6543    | No       |
-| `PORT`               | Server port                          | 80      | No       |
-| `MASTRA_PORT`        | Internal Mastra server port          | 4111    | No       |
+| Environment Variable | Description                        | Default | Required |
+| -------------------- | ---------------------------------- | ------- | -------- |
+| `RUNPOD_API_KEY`     | Runpod API key for AI model access |         | Yes      |
+| `DB_HOST`            | PostgreSQL database host           |         | No       |
+| `DB_USERNAME`        | PostgreSQL database username       |         | No       |
+| `DB_NAME`            | PostgreSQL database name           |         | No       |
+| `DB_PASSWORD`        | PostgreSQL database password       |         | No       |
+| `DB_PORT`            | PostgreSQL database port           | 6543    | No       |
+| `PORT`               | Server port                        | 80      | No       |
+| `MASTRA_PORT`        | Internal Mastra server port        | 4111    | No       |
 
 ## Database Setup (Optional)
-
-Database is optional. Without database credentials, the worker uses in-memory storage (no persistent memory between requests).
 
 For persistent agent memory, configure a PostgreSQL database with the `pgvector` extension. We recommend **Supabase** for easy setup:
 
@@ -43,8 +63,9 @@ curl https://YOUR_ENDPOINT_ID.api.runpod.ai/ping
 ```
 
 Response:
+
 ```json
-{"status": "healthy"}
+{ "status": "healthy" }
 ```
 
 ### List Available Agents
@@ -70,7 +91,7 @@ curl -X POST https://YOUR_ENDPOINT_ID.api.runpod.ai/api/tools/get-weather/execut
 ### Chat with Weather Agent
 
 ```bash
-curl -X POST https://YOUR_ENDPOINT_ID.api.runpod.ai/api/agents/weatherAgent/chat \
+curl -X POST https://YOUR_ENDPOINT_ID.api.runpod.ai/api/agents/weatherAgent/generate \
   -H "Content-Type: application/json" \
   -d '{
     "messages": [
@@ -82,20 +103,18 @@ curl -X POST https://YOUR_ENDPOINT_ID.api.runpod.ai/api/agents/weatherAgent/chat
 ## Features
 
 - Mastra AI framework with multi-agent support
-- Runpod AI SDK provider with OpenAI GPT-OSS-120B
-- PostgreSQL storage with PgVector for agent memory
+- Runpod AI SDK provider with Qwen3-32B model
+- PostgreSQL storage with PgVector for agent memory (optional)
 - `/ping` health check for load balancer monitoring
-- OpenAI-compatible chat API
 
 ## Architecture
 
 - **Runtime:** CPU (serverless)
-- **Endpoint Type:** Load Balancer (LB)
+- **Endpoint Type:** Load Balancer (experimental)
 - **Framework:** Mastra + Hono server
-- **Storage:** PostgreSQL with pgvector extension
+- **Storage:** In-memory (default) or PostgreSQL with pgvector
 
 ## Documentation
 
 - [Mastra Documentation](https://mastra.ai/docs)
 - [Runpod Serverless Documentation](https://docs.runpod.io/serverless)
-
