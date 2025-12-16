@@ -24,11 +24,13 @@ To avoid cold start delays, we recommend setting **Active Workers to 1** in your
 
 ## Storage and Memory
 
-The worker supports two storage modes for agent memory:
+The worker supports three storage modes for agent memory:
 
-**In-Memory (Default):** Without database credentials, the worker uses file-based in-memory storage. This data is **lost when the worker stops**. Suitable for experimentation and stateless use cases.
+**Ephemeral (Default):** Without database credentials and no network volume, the worker uses LibSQL (SQLite) file storage at `/tmp/mastra-storage.db`. This data is **lost when the worker stops**.
 
-**PostgreSQL (Persistent):** Configure a PostgreSQL database with the `pgvector` extension for persistent agent memory across requests and worker restarts.
+**Network Volume (Persistent):** Attach a network volume to the endpoint. The worker automatically detects `/runpod-volume` and stores data at `/runpod-volume/mastra-storage.db`, surviving worker restarts.
+
+**PostgreSQL (Persistent):** Configure a PostgreSQL database with the `pgvector` extension for full-featured persistent agent memory with vector embeddings.
 
 ## Endpoint Configuration
 
