@@ -29,6 +29,9 @@ RUN npm install --only=production --legacy-peer-deps && npm cache clean --force
 # Copy built output from builder
 COPY --from=builder /app/.mastra ./.mastra
 
+# Copy ingestion script for RAG (users run this to populate vector store)
+COPY --from=builder /app/scripts ./scripts
+
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S mastra -u 1001 && \
