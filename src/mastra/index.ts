@@ -1,12 +1,13 @@
 import { Mastra } from "@mastra/core";
 import { PinoLogger } from "@mastra/loggers";
 import { weatherAgent } from "./agents/weather-agent";
+import { runpodInfraAgent } from "./agents/runpod-infra-agent";
 import { createStorage } from "./utils/db";
 
 const storage = createStorage();
 
 export const mastra = new Mastra({
-  agents: { weatherAgent },
+  agents: { weatherAgent, runpodInfraAgent },
   storage,
   logger: new PinoLogger(),
   observability: {

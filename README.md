@@ -1,19 +1,80 @@
 # Worker Mastra
 
-Mastra production server running on Runpod Serverless CPU with Load Balancer support.
+Mastra AI agents running on RunPod Serverless CPU with Load Balancer support.
+
+This project is a **starting point for developers** to build and deploy AI agents using [Mastra](https://mastra.ai). Fork it, modify the agents, add your own tools, and deploy to RunPod.
 
 > **Note**: This project uses automated CI/CD workflows for building and pushing Docker images to Docker Hub.
 
 ## Features
 
-- Mastra Hono server with weather agent and tool (no API key required for weather)
-- Runpod AI SDK provider with OpenAI GPT-OSS-120B support
-- `/ping` health check endpoint for Runpod serverless load balancer
-- PostgreSQL storage with PgVector for agent memory
-- Observability and telemetry enabled (Mastra Cloud)
-- Optimized Docker image (< 1.5GB)
-- Non-root user security
+- Multiple AI agents with tool access (Weather Agent, RunPod Infra Agent)
+- MCP (Model Context Protocol) integration for external tools
+- RunPod AI SDK provider with Qwen3-32B model
+- `/ping` health check endpoint for RunPod serverless load balancer
+- Optional PostgreSQL storage with PgVector for agent memory
+- LibSQL file-based storage with network volume support
+- Optimized Docker image
 - Production-ready build
+
+## Agents
+
+This project includes two example agents. Use them as templates for your own agents.
+
+### Weather Agent
+
+A simple agent that fetches weather information for any location.
+
+```bash
+# Chat with the weather agent
+curl -X POST http://localhost:8080/api/agents/weatherAgent/generate \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "What is the weather in Berlin?"}]}'
+```
+
+### RunPod Infra Agent
+
+An agent that manages RunPod infrastructure using the [RunPod MCP Server](https://github.com/runpod/runpod-mcp). It can list, create, and delete pods.
+
+```bash
+# List all pods
+curl -X POST http://localhost:8080/api/agents/runpodInfraAgent/generate \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "List all my pods"}]}'
+
+# Create a pod
+curl -X POST http://localhost:8080/api/agents/runpodInfraAgent/generate \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Create a pod named my-test-pod with image runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04, RTX 4090 GPU, 1 GPU count. Proceed."}]}'
+
+# Delete a pod (replace POD_ID with actual pod ID)
+curl -X POST http://localhost:8080/api/agents/runpodInfraAgent/generate \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Delete pod POD_ID. I confirm."}]}'
+```
+
+### Creating Your Own Agent
+
+1. Create a new file in `src/mastra/agents/`
+2. Define your agent with instructions, model, and tools
+3. Register it in `src/mastra/index.ts`
+
+Example structure:
+
+```typescript
+// src/mastra/agents/my-agent.ts
+import { Agent } from "@mastra/core/agent";
+import { createRunpod } from "@runpod/ai-sdk-provider";
+
+const runpod = createRunpod({ apiKey: process.env.RUNPOD_API_KEY });
+
+export const myAgent = new Agent({
+  name: "My Agent",
+  instructions: "You are a helpful assistant...",
+  model: runpod("qwen/qwen3-32b-awq"),
+  tools: { /* your tools */ },
+});
+```
 
 ## Build
 
@@ -312,10 +373,30 @@ docker push YOUR_DOCKERHUB_USERNAME/worker-mastra:latest
 Once deployed, access at: `https://YOUR_ENDPOINT_ID.api.runpod.ai/`
 
 - `GET /ping` - Health check (returns `{"status": "healthy"}`)
-- `GET /api/tools` - List available tools
-- `POST /api/tools/get-weather/execute` - Execute weather tool
 - `GET /api/agents` - List available agents
-- `POST /api/agents/weatherAgent/chat` - Chat with weather agent
+- `POST /api/agents/{agentName}/generate` - Generate response from agent
+- `GET /api/tools` - List available tools
+- `POST /api/tools/{toolName}/execute` - Execute a tool directly
+
+### Example Requests
+
+```bash
+# Health check
+curl https://YOUR_ENDPOINT_ID.api.runpod.ai/ping
+
+# List agents
+curl https://YOUR_ENDPOINT_ID.api.runpod.ai/api/agents
+
+# Chat with weather agent
+curl -X POST https://YOUR_ENDPOINT_ID.api.runpod.ai/api/agents/weatherAgent/generate \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Weather in Tokyo?"}]}'
+
+# Chat with RunPod infra agent
+curl -X POST https://YOUR_ENDPOINT_ID.api.runpod.ai/api/agents/runpodInfraAgent/generate \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "List my pods"}]}'
+```
 
 ## Requirements Met
 
