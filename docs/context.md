@@ -9,7 +9,7 @@ This document outlines the key technical conventions and architectural decisions
   - Core logic is implemented as Mastra Agents (e.g., `weatherAgent`, `runpodInfraAgent`).
   - External functionalities are integrated as Mastra Tools or via MCP (Model Context Protocol).
   - Multiple agents can coexist in a single Mastra instance.
-- **AI Provider:** RunPod AI SDK Provider (`@runpod/ai-sdk-provider` v0.9.0)
+- **AI Provider:** Runpod AI SDK Provider (`@runpod/ai-sdk-provider` v0.9.0)
   - Uses Qwen3-32B model (`qwen/qwen3-32b-awq`) for agent reasoning.
   - Supports streaming and non-streaming text generation.
 - **Server Framework:** Hono (via Mastra's built-in server)
@@ -18,7 +18,7 @@ This document outlines the key technical conventions and architectural decisions
   - Agent memory: `PgVector` from `@mastra/pg` for embeddings (when DB credentials provided)
   - Falls back to in-memory storage when no database credentials are configured
 - **External Tool Integration:** MCP (Model Context Protocol) via `@mastra/mcp`
-  - MCP servers provide external tools to agents (e.g., RunPod API tools)
+  - MCP servers provide external tools to agents (e.g., Runpod API tools)
   - MCP configuration in `src/mastra/mcp-config.ts` manages server connections
 - **Project Structure:**
   - `src/mastra/agents/` - Agent definitions
@@ -100,7 +100,7 @@ When all DB credentials are provided, PostgreSQL with PgVector is used. Otherwis
 - **Memory Initialization:** Agents import `createAgentMemory()` from `utils/db.ts` - they do not handle database logic themselves.
 - **Tool Integration:** Agents can use:
   - Mastra Tools: Direct tool implementations (e.g., `weatherTool`)
-  - MCP Tools: External tools provided via MCP servers (e.g., RunPod API tools)
+  - MCP Tools: External tools provided via MCP servers (e.g., Runpod API tools)
 - **MCP Integration:** MCP servers are configured in `src/mastra/mcp-config.ts`. Agents access MCP tools by importing the MCP client and filtering available tools as needed.
 
 ## Local Development
@@ -117,7 +117,7 @@ When all DB credentials are provided, PostgreSQL with PgVector is used. Otherwis
 - **Docker Hub:** Images pushed to `runpod/worker-mastra:<version>`
 - **Runpod Git Pipeline:** Configure to build and deploy on push to `main` branch
 
-## RunPod Hub Integration
+## Runpod Hub Integration
 
 - **Hub Metadata:** `.runpod/` folder contains Hub publishing configuration
   - `hub.json`: Worker metadata, environment variables, and deployment config

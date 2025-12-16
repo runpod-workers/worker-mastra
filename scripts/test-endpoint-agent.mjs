@@ -27,7 +27,7 @@ async function testAgent() {
 
   try {
     const response = await fetch(
-      `${ENDPOINT_URL}/api/agents/weatherAgent/chat`,
+      `${ENDPOINT_URL}/api/agents/weatherAgent/generate`,
       {
         method: "POST",
         headers: {
