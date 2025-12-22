@@ -8,9 +8,10 @@ This project is a **starting point for developers** to build and deploy AI agent
 
 ## Features
 
-- Multiple AI agents with tool access (Weather Agent, Runpod Infra Agent, Web Search Agent)
+- Multiple AI agents with tool access (Weather Agent, Runpod Infra Agent, Web Search Agent, Docs RAG Agent)
 - MCP (Model Context Protocol) integration for external tools
 - Web search with [Exa](https://exa.ai) for AI-optimized search results
+- RAG (Retrieval Augmented Generation) with LibSQL vector store
 - Runpod AI SDK provider with Qwen3-32B model
 - `/ping` health check endpoint for Runpod serverless load balancer
 - Optional PostgreSQL storage with PgVector for agent memory
@@ -74,6 +75,85 @@ curl -X POST http://localhost:8080/api/agents/webSearchAgent/generate \
 The agent returns:
 - Key points summarizing the findings
 - Sources with titles and URLs
+
+### Docs RAG Agent
+
+A RAG (Retrieval Augmented Generation) agent that answers questions about Runpod documentation using semantic search over vector embeddings. This is an example of how to build a documentation assistant for your own projects.
+
+#### How It Works
+
+1. **Ingestion**: Run `scripts/ingest-docs.ts` to clone the [runpod/docs](https://github.com/runpod/docs) repo, chunk the markdown files, generate embeddings using OpenAI's `text-embedding-3-small`, and store them in a LibSQL vector database.
+
+2. **Retrieval**: When you ask a question, the agent uses `createVectorQueryTool` from `@mastra/rag` to find relevant documentation chunks via semantic similarity search.
+
+3. **Generation**: Retrieved chunks are passed to the LLM (Qwen3-32B) as context, which generates an answer based on the documentation.
+
+#### Architecture
+
+```
+User Question
+      │
+      ▼
+┌─────────────────┐
+│ Vector Query    │ ──► LibSQL Vector DB ──► Relevant Chunks
+│ Tool            │
+└─────────────────┘
+      │
+      ▼
+┌─────────────────┐
+│ Qwen3-32B LLM   │ ──► Answer based on retrieved docs
+└─────────────────┘
+```
+
+#### Setup
+
+**Required environment variables:**
+- `OPENAI_API_KEY`: For generating embeddings
+- `RUNPOD_API_KEY`: For the Qwen3 model
+
+**Step 1: Run ingestion** (populates the vector store)
+
+```bash
+OPENAI_API_KEY=your-key npx tsx scripts/ingest-docs.ts
+```
+
+This clones `runpod/docs`, processes ~80 markdown files into ~1700 chunks, and stores embeddings in `vector.db`.
+
+**Step 2: Query the agent**
+
+```bash
+curl -X POST http://localhost:4111/api/agents/docsRagAgent/generate \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "How do I create a serverless endpoint?"}]}'
+```
+
+#### Persistence with Network Volume
+
+For Runpod Serverless deployments, attach a network volume to persist the vector database across worker restarts:
+
+1. Create a network volume in Runpod console
+2. Attach it to your endpoint (mounts at `/runpod-volume`)
+3. Run ingestion once (stores at `/runpod-volume/vector.db`)
+4. Vector database persists across restarts
+
+Without a network volume, you'll need to re-run ingestion after each cold start.
+
+#### Customizing for Your Own Docs
+
+1. **Modify ingestion script** (`scripts/ingest-docs.ts`):
+   - Change `REPO_URL` to your documentation repository
+   - Update `INCLUDED_DIRS` to match your folder structure
+
+2. **Update agent instructions** (`src/mastra/agents/docs-rag-agent.ts`):
+   - Modify the system prompt for your documentation topics
+
+#### Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/mastra/agents/docs-rag-agent.ts` | RAG agent with vector query tool |
+| `scripts/ingest-docs.ts` | Documentation ingestion script |
+| `src/mastra/index.ts` | Mastra config with vector store |
 
 ### Creating Your Own Agent
 
@@ -156,6 +236,7 @@ docker build --platform linux/amd64 -t runpod/worker-mastra:test .
 ### Optional (Agent-specific)
 
 - `EXA_API_KEY`: Exa API key for web search agent ([get one here](https://exa.ai))
+- `OPENAI_API_KEY`: OpenAI API key for RAG embeddings (required for Docs RAG Agent)
 
 ### Optional (Database - for persistent storage)
 
@@ -246,7 +327,7 @@ For local development and testing, you can run Mastra directly without building 
    ```
 
    This will start:
-   - 🎮 **Playground UI**: http://localhost:4111/ - Chat with your agents (weatherAgent, runpodInfraAgent, webSearchAgent)
+   - 🎮 **Playground UI**: http://localhost:4111/ - Chat with your agents (weatherAgent, runpodInfraAgent, webSearchAgent, docsRagAgent)
    - 🔌 **API Endpoints**: http://localhost:4111/api - REST API for agents
    - 📚 **API Documentation**: http://localhost:4111/swagger-ui - Interactive API explorer
 
@@ -384,6 +465,7 @@ The project includes GitHub Actions workflows for automated builds:
      - `MASTRA_PORT`: Internal Mastra server port (default: 4111)
      - `DB_PORT`: PostgreSQL database port (default: 6543 for transaction pooler)
      - `EXA_API_KEY`: Exa API key for web search agent
+     - `OPENAI_API_KEY`: OpenAI API key for RAG embeddings
 8. Click **Create Endpoint**
 
 ### Option 2: Build and Push Locally
@@ -431,6 +513,11 @@ curl -X POST https://YOUR_ENDPOINT_ID.api.runpod.ai/api/agents/runpodInfraAgent/
 curl -X POST https://YOUR_ENDPOINT_ID.api.runpod.ai/api/agents/webSearchAgent/generate \
   -H "Content-Type: application/json" \
   -d '{"messages": [{"role": "user", "content": "Latest news on AI agents"}]}'
+
+# Chat with docs RAG agent
+curl -X POST https://YOUR_ENDPOINT_ID.api.runpod.ai/api/agents/docsRagAgent/generate \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "How do I create a serverless endpoint?"}]}'
 ```
 
 ## Requirements Met
