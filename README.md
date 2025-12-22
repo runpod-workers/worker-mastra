@@ -221,7 +221,7 @@ For local development and testing, you can run Mastra directly without building 
    - 🔌 **API Endpoints**: http://localhost:4111/api - REST API for agents
    - 📚 **API Documentation**: http://localhost:4111/swagger-ui - Interactive API explorer
 
-**Note:** Make sure the `runpod-mcp` project is built and available at `../runpod-mcp/build/index.js` for the RunPod Infra Management agent to work. If you haven't built it yet:
+**Note:** Make sure the `runpod-mcp` project is built and available at `../runpod-mcp/build/index.js` for the Runpod Infra Management agent to work. If you haven't built it yet:
 
 ```bash
 cd ../runpod-mcp
