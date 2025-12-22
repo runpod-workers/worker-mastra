@@ -1,17 +1,18 @@
 # Worker Mastra
 
-Mastra AI agents running on RunPod Serverless CPU with Load Balancer support.
+Mastra AI agents running on Runpod Serverless CPU with Load Balancer support.
 
-This project is a **starting point for developers** to build and deploy AI agents using [Mastra](https://mastra.ai). Fork it, modify the agents, add your own tools, and deploy to RunPod.
+This project is a **starting point for developers** to build and deploy AI agents using [Mastra](https://mastra.ai). Fork it, modify the agents, add your own tools, and deploy to Runpod.
 
 > **Note**: This project uses automated CI/CD workflows for building and pushing Docker images to Docker Hub.
 
 ## Features
 
-- Multiple AI agents with tool access (Weather Agent, RunPod Infra Agent)
+- Multiple AI agents with tool access (Weather Agent, Runpod Infra Agent, Web Search Agent)
 - MCP (Model Context Protocol) integration for external tools
-- RunPod AI SDK provider with Qwen3-32B model
-- `/ping` health check endpoint for RunPod serverless load balancer
+- Web search with [Exa](https://exa.ai) for AI-optimized search results
+- Runpod AI SDK provider with Qwen3-32B model
+- `/ping` health check endpoint for Runpod serverless load balancer
 - Optional PostgreSQL storage with PgVector for agent memory
 - LibSQL file-based storage with network volume support
 - Optimized Docker image
@@ -19,22 +20,21 @@ This project is a **starting point for developers** to build and deploy AI agent
 
 ## Agents
 
-This project includes two example agents. Use them as templates for your own agents.
+This project includes example agents. Use them as templates for your own agents.
 
 ### Weather Agent
 
 A simple agent that fetches weather information for any location.
 
 ```bash
-# Chat with the weather agent
 curl -X POST http://localhost:8080/api/agents/weatherAgent/generate \
   -H "Content-Type: application/json" \
   -d '{"messages": [{"role": "user", "content": "What is the weather in Berlin?"}]}'
 ```
 
-### RunPod Infra Agent
+### Runpod Infra Agent
 
-An agent that manages RunPod infrastructure using the [RunPod MCP Server](https://github.com/runpod/runpod-mcp). It can list, create, and delete pods.
+An agent that manages Runpod infrastructure using the [Runpod MCP Server](https://github.com/runpod/runpod-mcp). It can list, create, and delete pods.
 
 ```bash
 # List all pods
@@ -52,6 +52,28 @@ curl -X POST http://localhost:8080/api/agents/runpodInfraAgent/generate \
   -H "Content-Type: application/json" \
   -d '{"messages": [{"role": "user", "content": "Delete pod POD_ID. I confirm."}]}'
 ```
+
+### Web Search Agent
+
+An agent that searches the web using [Exa](https://exa.ai) and provides summarized results with sources.
+
+**Required**: Set `EXA_API_KEY` environment variable ([get one here](https://exa.ai))
+
+```bash
+# Search and summarize
+curl -X POST http://localhost:8080/api/agents/webSearchAgent/generate \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "What are the latest developments in AI agents?"}]}'
+
+# Search with specific result count
+curl -X POST http://localhost:8080/api/agents/webSearchAgent/generate \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Search for Runpod serverless GPU news, max 3 results"}]}'
+```
+
+The agent returns:
+- Key points summarizing the findings
+- Sources with titles and URLs
 
 ### Creating Your Own Agent
 
@@ -130,17 +152,24 @@ docker build --platform linux/amd64 -t runpod/worker-mastra:test .
 ### Required
 
 - `RUNPOD_API_KEY`: Your Runpod API key for accessing Qwen3 model via AI SDK Provider
+
+### Optional (Agent-specific)
+
+- `EXA_API_KEY`: Exa API key for web search agent ([get one here](https://exa.ai))
+
+### Optional (Database - for persistent storage)
+
 - `DB_HOST`: PostgreSQL database host address
 - `DB_USERNAME`: PostgreSQL database username
 - `DB_NAME`: PostgreSQL database name
 - `DB_PASSWORD`: PostgreSQL database password
+- `DB_PORT`: PostgreSQL database port (default: `6543` for transaction pooler)
 
-### Optional
+### Optional (Server)
 
 - `PORT`: Server port (default: `80`)
 - `PORT_HEALTH`: Health check port (default: same as `PORT`)
 - `MASTRA_PORT`: Internal Mastra server port (default: `4111`)
-- `DB_PORT`: PostgreSQL database port (default: `6543` for transaction pooler)
 
 ### PostgreSQL Database Setup
 
@@ -217,7 +246,7 @@ For local development and testing, you can run Mastra directly without building 
    ```
 
    This will start:
-   - 🎮 **Playground UI**: http://localhost:4111/ - Chat with your agents (weatherAgent, runpodInfraAgent)
+   - 🎮 **Playground UI**: http://localhost:4111/ - Chat with your agents (weatherAgent, runpodInfraAgent, webSearchAgent)
    - 🔌 **API Endpoints**: http://localhost:4111/api - REST API for agents
    - 📚 **API Documentation**: http://localhost:4111/swagger-ui - Interactive API explorer
 
@@ -354,6 +383,7 @@ The project includes GitHub Actions workflows for automated builds:
      - `PORT_HEALTH`: Health check port (default: same as PORT)
      - `MASTRA_PORT`: Internal Mastra server port (default: 4111)
      - `DB_PORT`: PostgreSQL database port (default: 6543 for transaction pooler)
+     - `EXA_API_KEY`: Exa API key for web search agent
 8. Click **Create Endpoint**
 
 ### Option 2: Build and Push Locally
@@ -392,10 +422,15 @@ curl -X POST https://YOUR_ENDPOINT_ID.api.runpod.ai/api/agents/weatherAgent/gene
   -H "Content-Type: application/json" \
   -d '{"messages": [{"role": "user", "content": "Weather in Tokyo?"}]}'
 
-# Chat with RunPod infra agent
+# Chat with Runpod infra agent
 curl -X POST https://YOUR_ENDPOINT_ID.api.runpod.ai/api/agents/runpodInfraAgent/generate \
   -H "Content-Type: application/json" \
   -d '{"messages": [{"role": "user", "content": "List my pods"}]}'
+
+# Chat with web search agent
+curl -X POST https://YOUR_ENDPOINT_ID.api.runpod.ai/api/agents/webSearchAgent/generate \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "Latest news on AI agents"}]}'
 ```
 
 ## Requirements Met

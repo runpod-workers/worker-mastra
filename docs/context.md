@@ -6,20 +6,22 @@ This document outlines the key technical conventions and architectural decisions
 
 - **Language:** TypeScript
 - **AI Framework:** Mastra (`@mastra/core`)
-  - Core logic is implemented as Mastra Agents (e.g., `weatherAgent`, `runpodInfraAgent`).
+  - Core logic is implemented as Mastra Agents (e.g., `weatherAgent`, `runpodInfraAgent`, `webSearchAgent`).
   - External functionalities are integrated as Mastra Tools or via MCP (Model Context Protocol).
   - Multiple agents can coexist in a single Mastra instance.
-- **AI Provider:** Runpod AI SDK Provider (`@runpod/ai-sdk-provider` v0.9.0)
+- **AI Provider:** Runpod AI SDK Provider (`@runpod/ai-sdk-provider`)
   - Uses Qwen3-32B model (`qwen/qwen3-32b-awq`) for agent reasoning.
   - Supports streaming and non-streaming text generation.
 - **Server Framework:** Hono (via Mastra's built-in server)
-- **Storage:** Optional PostgreSQL with PgVector extension (defaults to in-memory)
+- **Storage:** Optional PostgreSQL with PgVector extension (defaults to LibSQL file storage)
   - Global storage: `PostgresStore` from `@mastra/pg` (when DB credentials provided)
+  - File storage: `LibSQLStore` from `@mastra/libsql` (when no DB credentials)
   - Agent memory: `PgVector` from `@mastra/pg` for embeddings (when DB credentials provided)
-  - Falls back to in-memory storage when no database credentials are configured
-- **External Tool Integration:** MCP (Model Context Protocol) via `@mastra/mcp`
-  - MCP servers provide external tools to agents (e.g., Runpod API tools)
-  - MCP configuration in `src/mastra/mcp-config.ts` manages server connections
+  - Falls back to LibSQL file storage when no database credentials are configured
+- **External Tool Integration:** 
+  - Mastra Tools: Direct tool implementations (e.g., `weatherTool`, `webSearchTool`)
+  - MCP (Model Context Protocol) via `@mastra/mcp` for external API tools (e.g., Runpod API tools)
+- **Web Search:** Exa (`exa-js`) for AI-optimized semantic web search
 - **Project Structure:**
   - `src/mastra/agents/` - Agent definitions
   - `src/mastra/tools/` - Mastra tool implementations
@@ -42,7 +44,7 @@ This document outlines the key technical conventions and architectural decisions
 
 ## Memory and Storage Configuration
 
-- **Optional Database:** Storage is optional. When database credentials are not provided, the system uses in-memory storage. This allows the worker to run without a database for testing or simple use cases.
+- **Optional Database:** Storage is optional. When database credentials are not provided, the system uses LibSQL file storage. This allows the worker to run without a database for testing or simple use cases.
 
 - **Centralized Database Utilities:** All database credential checking and storage creation is centralized in `src/mastra/utils/db.ts`. This utility provides:
   - `hasDbCredentials`: Boolean check for all required DB credentials
@@ -78,6 +80,10 @@ This document outlines the key technical conventions and architectural decisions
 
 - `RUNPOD_API_KEY`: Runpod API key for accessing AI models
 
+### Optional (Agent-specific)
+
+- `EXA_API_KEY`: Exa API key for web search agent
+
 ### Optional (Database - for persistent storage)
 
 - `DB_HOST`: PostgreSQL database host address
@@ -86,7 +92,7 @@ This document outlines the key technical conventions and architectural decisions
 - `DB_PASSWORD`: PostgreSQL database password
 - `DB_PORT`: PostgreSQL database port (default: `6543` for transaction pooler)
 
-When all DB credentials are provided, PostgreSQL with PgVector is used. Otherwise, in-memory storage is used.
+When all DB credentials are provided, PostgreSQL with PgVector is used. Otherwise, LibSQL file storage is used.
 
 ### Optional (Server)
 
@@ -99,9 +105,9 @@ When all DB credentials are provided, PostgreSQL with PgVector is used. Otherwis
 - **Multiple Agents:** Multiple agents can be registered in a single Mastra instance. Each agent has its own memory instance but shares the global storage provider.
 - **Memory Initialization:** Agents import `createAgentMemory()` from `utils/db.ts` - they do not handle database logic themselves.
 - **Tool Integration:** Agents can use:
-  - Mastra Tools: Direct tool implementations (e.g., `weatherTool`)
-  - MCP Tools: External tools provided via MCP servers (e.g., Runpod API tools)
-- **MCP Integration:** MCP servers are configured in `src/mastra/mcp-config.ts`. Agents access MCP tools by importing the MCP client and filtering available tools as needed.
+  - Mastra Tools: Direct tool implementations (e.g., `weatherTool`, `webSearchTool`)
+  - MCP Tools: External tools provided via MCP servers (e.g., Runpod API tools via `@runpod/mcp-server`)
+- **MCP Integration:** Use `MCPClient` from `@mastra/mcp` to connect to MCP servers. Filter tools as needed for each agent.
 
 ## Local Development
 
